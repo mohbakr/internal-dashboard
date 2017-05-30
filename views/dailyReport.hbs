@@ -1,0 +1,145 @@
+<div id="help">
+  <loading v-show="showLoading"></loading>
+</div>
+
+
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>daily report</small></h1>
+    <ol class="breadcrumb">
+      <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+      <li><a href="#"><i class="fa fa-dashboard"></i> Daily Report</a></li>
+    </ol>
+  </section>
+  <section class="content">
+    <div class="row">
+      <div class="col-md-3" v-for="info in dailyReportData">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">\{{info.landscape | uppercase}} Http Status</h3>
+          </div>
+          <!-- /.box-header -->
+          <div class="box-body no-padding">
+            <table class="table table-striped">
+              <tr>
+                <th style="text-align: center;">Code</th>
+                <th style="text-align: center;">Count</th>
+              </tr>
+              <tr v-for="code in info.data.httpStatus">
+                <td style="text-align: center;">\{{ code.key }}</td>
+                <td style="text-align: center;">\{{ code.doc_count }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-3" v-for="n in dailyReportData.length">
+        <div class="box">
+          <div class="box-header">
+            <h3 class="box-title">\{{ dailyReportData[n].landscape | uppercase }} Log Count</h3>
+          </div>
+          <!-- /.box-header -->
+          <div class="box-body no-padding">
+            <table class="table table-striped">
+              <tr>
+                <th style="text-align: center; padding: 8px 0px;">Key</th>
+                <th style="text-align: center;">24h</th>
+                <th style="text-align: center;">48h</th>
+                <th style="text-align: center;">48h</th>
+              </tr>
+              <tr v-for="(key, value) in dailyReportData[n].data">
+                <td v-if="key != 'httpStatus'" style="text-align: center; padding: 8px 0px;">\{{ key }}</td>
+                <td v-if="key != 'httpStatus'" style="text-align: center; padding: 8px 0px;">\{{ dailyReportData[n].data[key] }}</td>
+                <td v-if="key != 'httpStatus'" style="text-align: center; padding: 8px 0px;">\{{ twoDayReportData[n].data[key] }}</td>
+                <td v-if="key != 'httpStatus'" style="text-align: center; padding: 8px 0px;">\{{ (((dailyReportData[n].data[key] - (twoDayReportData[n].data[key] - dailyReportData[n].data[key]))/(twoDayReportData[n].data[key] - dailyReportData[n].data[key])) * 100).toFixed(2) }}%</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div> 
+    </div>
+  </section>
+</div>
+
+<template id="loading-template">
+  <div class="loading-overlay">
+    <div class="sk-three-bounce">
+      <div class="sk-child sk-bounce1"></div>
+      <div class="sk-child sk-bounce2"></div>
+      <div class="sk-child sk-bounce3"></div>
+    </div>
+  </div>
+</template>
+
+{{#extend "scripts"}}
+<script type="text/javascript">
+Vue.filter('convertLandscape', function(value) {
+  var labeltype = {
+    cn: "1605 CN Landscape",
+    us: "1605 US Landscape",
+    eu: "1605 EU Landscape",
+    monsoon_z2: "DevOps Infrastructure",
+    msa_us: "MSA US Landscape",
+  }
+  return labeltype[value];
+});
+var help = new Vue({
+  el: '#help',
+  data: {
+    showLoading: false
+  },
+  components: {
+    'loading': {
+      template: '#loading-template',
+    }
+  }
+});
+Vue.http.interceptors.push((request, next) => {
+  console.log("http.interceptors.push");
+  help.showLoading = true;
+  next(function(response) {
+    help.showLoading = false;
+    return response;
+  });
+});
+var app = new Vue({
+  el: '#app',
+  data: {
+    landscapes: [],
+    landscapesUrl: '/api/v1/zabbix/landscapes',
+    dailyReportData: [],
+    dailyUrl: '/api/v1/report/24h',
+    twoDayReportData: [],
+    twoDayUrl: '/api/v1/report/48h',
+    show: false
+  },
+  created: function() {
+    this.getLandscapes();
+    this.getdailyReport();
+    this.getTwoDayReport();
+  },
+  methods: {
+    getTwoDayReport: function() {
+      this.$http.get(this.twoDayUrl).then(function(response) {
+        this.$set('twoDayReportData', response.data.status != 'error' ? response.data.message : []);
+      })
+    },
+    getdailyReport: function() {
+      this.$http.get(this.dailyUrl).then(function(response) {
+        this.$set('dailyReportData', response.data.status != 'error' ? response.data.message : []);
+      })
+    },
+    getLandscapes: function() {
+      this.$http.get(this.landscapesUrl).then(function(response) {
+        this.$set('landscapes', response.data.status != 'error' ? response.data.message : []);
+      }).catch(function(response) {
+        console.log(response);
+      })
+    }
+  }
+});
+</script>
+{{/extend}}

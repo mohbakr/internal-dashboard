@@ -1,0 +1,134 @@
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>Dashboard<small>Version 2.0</small></h1>
+    <ol class="breadcrumb">
+      <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+      <li class="active">Dashboard</li>
+    </ol>
+  </section>
+  <!-- Main content -->
+  <section class="content">
+    <!-- Info boxes -->
+    <div class="row">
+      <div class="col-md-3 col-sm-6 col-xs-12" v-for="landscape in triggers">
+        <div class="info-box">
+          <span class="info-box-icon bg-aqua"><i class="fa fa-map-signs"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">\{{ landscape.landscape.toUpperCase() }}</span>
+            <span class="info-box-number">\{{ landscape.data.length }}</span>
+          </div>
+          <!-- /.info-box-content -->
+        </div>
+        <!-- /.info-box -->
+      </div>
+      <!-- /.col -->
+    </div>
+    <!-- /.row -->
+    <div class="row" v-for="landscape in triggers"> 
+      <div class="col-md-12">
+        <div class="box box-info">
+          <div class="box-header with-border">
+            <h3 class="box-title">\{{ landscape.landscape.toUpperCase() }}</h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+              <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+            </div>
+          </div>
+          <!-- /.box-header -->
+          <div class="box-body">
+            <div class="table-responsive">
+              <table class="table no-margin">
+                <thead>
+                  <tr>
+                    <th class="col-md-2">Host Name</th>
+                    <th class="col-md-2">Host IP</th>
+                    <th class="col-md-4">Trigger Name</th>
+                    <th class="col-md-2">Trigger Severity</th>
+                    <th class="col-md-2">Start Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="trigger in landscape.data">
+                    <td class="col-md-2">\{{ trigger.host_name }}</td>
+                    <td class="col-md-2">\{{ trigger.host_conn }}</td>
+                    <td class="col-md-4">\{{ trigger.trigger_name }}</td>
+                    <td class="col-md-2"><span class="label" v-bind:class="trigger.trigger_severity | reverseLabel">\{{ trigger.trigger_severity }}</span></td>
+                    <td class="col-md-2">\{{ trigger.create_time }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- /.table -->
+            </div>
+          </div>
+          <!-- /.box-body -->
+          <div class="box-footer clearfix">
+            <a href="/zabbix/\{{ landscape.landscape }}" class="btn btn-sm btn-default btn-flat pull-right">View History Trigger</a>
+          </div>
+        </div>
+        <!-- /.box -->
+      </div>
+    </div>
+  </section>
+  <!-- /.content -->
+</div>
+
+{{#extend "scripts"}}
+<script type="text/javascript">
+Vue.filter('reverseLabel', function(value) {
+  var labeltype = {
+    Information: "label-info",
+    Warning: "label-warning",
+    Average: "label-average",
+    High: "label-high",
+    Disaster: "label-danger",
+    "Not classified": "label-default"
+  }
+  return labeltype[value];
+});
+Vue.filter('convertLandscape', function(value) {
+  var labeltype = {
+    cn: "1605 CN Landscape",
+    us: "1605 US Landscape",
+    eu: "1605 EU Landscape",
+    monsoon_z2: "DevOps Infrastructure",
+    msa_us: "MSA US Landscape",
+  }
+  return labeltype[value];
+});
+var app = new Vue({
+  el: '#app',
+  data: {
+    triggers: [],
+    landscapes: [],
+    triggersUrl: 'api/v1/zabbix/triggers/current',
+    landscapesUrl: 'api/v1/zabbix/landscapes'
+  },
+  ready: function() {
+    this.getLandscapes();
+    this.getTriggers();
+  },
+  methods: {
+    getTriggers: function() {
+      this.$http.get(this.triggersUrl).then(function(response) {
+        this.$set('triggers', response.data.status != 'error' ? response.data.message : []);
+      }).catch(function(response) {
+        console.log(response);
+      })
+    },
+    getLandscapes: function() {
+      this.$http.get(this.landscapesUrl).then(function(response) {
+        this.$set('landscapes', response.data.status != 'error' ? response.data.message : []);
+      }).catch(function(response) {
+        console.log(response);
+      })
+    },
+  }
+});
+$(document).ready(function() {
+  setInterval(function() {
+    app.getTriggers();
+  }, 1000 * 60)
+});
+</script>
+{{/extend}}

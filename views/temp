@@ -1,0 +1,177 @@
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>Dashboard<small>Version 2.0</small></h1>
+    <ol class="breadcrumb">
+      <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+      <li><a href="#"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+    </ol>
+  </section>
+  <!-- Main content -->
+  <section class="content">
+    <!-- Info boxes -->
+    <!-- /.row -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box box-info">
+          <div class="box-header with-border">
+            <h3 class="box-title">Kubernetes Node Status</h3>
+          </div>
+          <!-- /.box-header -->
+          <div class="box-body">
+            <div class="table-responsive">
+              <table class="table no-margin">
+                <thead>
+                  <tr>
+                    <th>Host Name</th>
+                    <th>Internal IP</th>
+                    <th>External IP</th>
+                    <th>Memory Status</th>
+                    <th>Disk Space Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <div id="app">
+                    <td class="col-md-2">\{{ triggers[0][2].address }}</td>
+                    <td class="col-md-2">\{{ triggers[0][0].address }}</td>
+                    <td class="col-md-2">\{{ triggers[0][1].address }}</td>
+
+                    <td class="col-md-2">\{{ memPre[0].message }}</td>
+                    <td class="col-md-2">\{{ diskSpace[0].message }}</td>
+                  </div>
+                </tbody>
+              </table>
+              <!-- /.table -->
+            </div>
+          </div>
+
+          <div class="box-body">
+            <div class="table-responsive">
+              <table class="table no-margin">
+                <thead>
+                  <tr>
+                    <th>Host Name</th>
+                    <th>Internal IP</th>
+                    <th>External IP</th>
+                    <th>Memory Status</th>
+                    <th>Disk Space Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <div id="app">
+                    <td class="col-md-2">\{{ triggers[1][2].address }}</td>
+                    <td class="col-md-2">\{{ triggers[1][0].address }}</td>
+                    <td class="col-md-2">\{{ triggers[1][1].address }}</td>
+
+                    <td class="col-md-2">\{{ memPre[1].message }}</td>
+                    <td class="col-md-2">\{{ diskSpace[1].message }}</td>
+                  </div>
+                </tbody>
+              </table>
+              <!-- /.table -->
+            </div>
+          </div>
+
+          <div class="box-body">
+            <div class="table-responsive">
+              <table class="table no-margin">
+                <thead>
+                  <tr>
+                    <th>Host Name</th>
+                    <th>Internal IP</th>
+                    <th>External IP</th>
+                    <th>Memory Status</th>
+                    <th>Disk Space Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <div id="app">
+                    <td class="col-md-2">\{{ triggers[2][2].address }}</td>
+                    <td class="col-md-2">\{{ triggers[2][0].address }}</td>
+                    <td class="col-md-2">\{{ triggers[2][1].address }}</td>
+
+                    <td class="col-md-2">\{{ memPre[2].message }}</td>
+                    <td class="col-md-2">\{{ diskSpace[2].message }}</td>
+                  </div>
+                </tbody>
+                
+              </table>
+              <!-- /.table -->
+            </div>
+          </div>
+
+          <div class="box-body">
+            <div class="table-responsive">
+              <table class="table no-margin">
+                <thead>
+                  <tr>
+                    <th>Host Name</th>
+                    <th>Internal IP</th>
+                    <th>External IP</th>
+                    <th>Memory Status</th>
+                    <th>Disk Space Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <div id="app">
+                    <td class="col-md-2">\{{ triggers[3][2].address }}</td>
+                    <td class="col-md-2">\{{ triggers[3][0].address }}</td>
+                    <td class="col-md-2">\{{ triggers[3][1].address }}</td>
+
+                    <td class="col-md-2">\{{ memPre[3].message }}</td>
+                    <td class="col-md-2">\{{ diskSpace[3].message }}</td>
+                  </div>
+                </tbody>
+              </table>
+                <p v-if="seen">Message Can Be Seen!</p>
+                <p><button class="btn btn-lg btn-primary" v-on:click="seen = !seen">Toggle</button></p>
+              <!-- /.table -->
+            </div>
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+      </div>
+
+  </section>
+  <!-- /.content -->
+</div>
+
+{{#extend "scripts"}}
+<script>
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    triggers: [],
+    memPre: [],
+    diskSpace: [],
+  },
+
+  created: function(){
+    this.getStatus();
+  },
+
+  methods: {
+    getStatus: function() {
+
+      this.$http.get('/api/v1/kubestatus/getdata').then(function(response){
+
+        this.$set('triggers', response.status != 'error' ? response.body.nodeAddress: []);
+
+        this.$set('memPre', response.status != 'error' ? response.body.nodeMemoryPressure: []);
+
+        this.$set('diskSpace', response.status != 'error' ? response.body.nodeDiskSpace: []);
+
+
+      }.bind(this));
+    }
+
+
+  } 
+});
+
+
+
+</script>
+{{/extend}}

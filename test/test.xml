@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<message>
+	<date>2016.12.15</date>
+	<proxy>
+		<name/>
+	</proxy>
+	<action>
+		<id>3</id>
+		<name>Report problems to Zabbix administrators with Resources Alert</name>
+	</action>
+	<event>
+		<age>0m</age>
+		<date>2016.12.15</date>
+		<id>155907</id>
+		<recovery>
+			<date>{EVENT.RECOVERY.DATE}</date>
+			<id>{EVENT.RECOVERY.ID}</id>
+			<status>{EVENT.RECOVERY.STATUS}</status>
+			<time>{EVENT.RECOVERY.TIME}</time>
+			<value>{EVENT.RECOVERY.VALUE}</value>
+		</recovery>
+		<status>OK</status>
+		<time>14:55:52</time>
+		<value>1</value>
+	</event>
+	<trigger>
+		<name>CPU used more than 70% on 192.168.1.6</name>
+		<status>OK</status>
+		<severity>Warning</severity>
+		<id>14890</id>
+		<url/>
+	</trigger>
+	<item>
+		<id>28792</id>
+		<key>system.cpu.util[,user]</key>
+		<name>CPU user time</name>
+		<value>81.42 %</value>
+	</item>
+	<host>
+		<conn>192.168.1.6</conn>
+		<dns/>
+		<ip>192.168.1.6</ip>
+		<name>192.168.1.6</name>
+	</host>
+</message>

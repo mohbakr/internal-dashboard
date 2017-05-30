@@ -1,0 +1,181 @@
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <h1>Dashboard<small>Version 2.0</small></h1>
+    <ol class="breadcrumb">
+      <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+      <li><a href="#"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+      <li class="active">\{{ current_landscape }}</li>
+    </ol>
+  </section>
+  <!-- Main content -->
+  <section class="content">
+    <!-- Info boxes -->
+    <!-- /.row -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box box-info">
+          <div class="box-header with-border">
+            <h3 class="box-title">Open Alerts</h3>
+            <div class="box-tools pull-right">
+              <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+              <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+            </div>
+          </div>
+          <!-- /.box-header -->
+          <div class="box-body">
+            <div class="table-responsive">
+              <table class="table no-margin">
+                <thead>
+                  <tr>
+                    <th>Host Name</th>
+                    <th>Host IP</th>
+                    <th>Trigger Name</th>
+                    <th>Trigger Severity</th>
+                    <th>Start Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="trigger in current_triggers">
+                    <td class="col-md-2">\{{ triggers.host_name }}</td>
+                    <td class="col-md-2">\{{ triggers.host_conn }}</td>
+                    <td class="col-md-4">\{{ triggers.trigger_name }}</td>
+                    <td class="col-md-2"><span class="label" v-bind:class="trigger.trigger_severity | reverseLabel">\{{ trigger.trigger_severity }}</span></td>
+                    <td class="col-md-2">\{{ trigger.create_time }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- /.table -->
+            </div>
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+      </div>
+      <!-- /.row -->
+      <section class="content">
+        <div class="row">
+          <div class="col-xs-12">
+            <div class="box">
+              <div class="box-header">
+                <h3 class="box-title">Alerts History</h3>
+              </div>
+              <div class="box-body">
+                <table id="example" class="table table-bordered table-hover">
+                  <thead>
+                    <tr>
+                      <th class="col-md-2">Host Name</th>
+                      <th class="col-md-2">Host IP</th>
+                      <th class="col-md-4">Trigger Name</th>
+                      <th class="col-md-2">Trigger Severity</th>
+                      <th class="col-md-2">Start Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Main row -->
+      <!-- /.row -->
+  </section>
+  <!-- /.content -->
+</div>
+
+{{#extend "scripts"}}
+<script type="text/javascript">
+var current_landscape = location.pathname.split('/').reverse()[0];
+Vue.filter('reverseLabel', function(value) {
+  var labelType = {
+    Information: "label-info",
+    Warning: "label-warning",
+    Average: "label-average",
+    High: "label-high",
+    Disaster: "label-danger",
+    "Not classified": "label-default"
+  }
+  return labelType[value];
+});
+Vue.filter('convertLandscape', function(value) {
+  var labeltype = {
+    cn: "1605 CN Landscape",
+    us: "1605 US Landscape",
+    eu: "1605 EU Landscape",
+    monsoon_z2: "DevOps Infrastructure",
+    msa_us: "MSA US Landscape",
+  }
+  return labeltype[value];
+});
+var app = new Vue({
+  el: '#app',
+  data: {
+    triggers: [],
+    landscapes: [],
+
+    once: true,
+    current_landscape: current_landscape,
+    landscapesUrl: '/api/v1/zabbix/landscapes',
+    triggersUrl: '/api/v1/zabbix/triggers/all/' + current_landscape,
+  },
+  created: function() {
+    this.getLandscapes();
+    this.getTriggers();
+  },
+  computed: {
+    current_triggers: function() {
+      result = [];
+      this.triggers.forEach(function(item) {
+        if (item.trigger_status == "PROBLEM") {
+          result.push(item);
+        }
+      });
+      return result;
+    }
+  },
+  methods: {
+    getTriggers: function() {
+      this.$http.get(this.triggersUrl).then(function(response) {
+        this.$set('triggers', response.data.status != 'error' ? response.data.message : []);
+        if(this.once) {
+          this.$set('once', false);
+          $('#example').DataTable({
+            data: this.triggers,
+            "paging": true,
+            "lengthChange": false,
+            "searching": false,
+            "ordering": true,
+            "order": [[4, "desc"]],
+            "info": true,
+            "autoWidth": false,
+            columns: [
+            { data: 'host_name' },
+            { data: 'host_conn' },
+            { data: 'trigger_name' },
+            { data: 'trigger_severity' },
+            { data: 'create_time' }
+            ]
+          });
+        }
+      }).catch(function(response) {
+        console.log(response);
+      })
+    },
+    getLandscapes: function() {
+      this.$http.get(this.landscapesUrl).then(function(response) {
+        this.$set('landscapes', response.data.status != 'error' ? response.data.message : []);
+      }).catch(function(response) {
+        console.log(response);
+      })
+    },
+  }
+});
+$(document).ready(function() {
+  setInterval(function() {
+    app.getTriggers();
+  }, 1000 * 60)
+});
+</script>
+{{/extend}}
